@@ -1,0 +1,17 @@
+
+{{!-- Single File --}}
+<div class="fondo">
+<form class="formularioArchivos" action="/api/users/{{user._id}}/documents" method="POST" enctype="multipart/form-data">
+    <legend>Single file</legend>
+    <input type="file" name="myFile">
+    <input type="submit">
+</form>
+
+{{!-- Miltiple Files --}}
+<form  class="formularioArchivos" action="/api/users/{{user._id}}/documents/multiple" method="POST" enctype="multipart/form-data">
+    <legend>Miltiple files</legend>
+    <input type="file" name="myFiles" multiple>
+    <input type="submit">
+</form>
+</div>
+
