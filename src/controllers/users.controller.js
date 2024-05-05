@@ -7,6 +7,7 @@ const TYPES_ERROR = require('../handlers/errors/types.errors')
 const EErrors = require('../handlers/errors/enum-errors')
 const authMiddleware = require('../middlewares/private-acces-middleware')
 const upload  = require('../middlewares/multer')
+const Users = require('../DAO/models/user.model')
 
 router.get ('/user-cart', async (req, res, next) => {
     try {
@@ -125,12 +126,31 @@ router.put('/', async (req, res) => {
 router.put('/premium/:uid', async (req, res) => {
     try {
         const { uid } = req.params
-        await UserService.toggleUserRole(uid)
-        res.status(200).json({ status: 'success', message: 'Actualizacion de role correcta' })
+        const requiredDocuments = ['Identificacion', 'Comprobantededomicilio', 'Comprobantedeestadodecuenta']
+        // nos traemos los documentos cargados en el usuario y los formateamos
+        const user = await Users.findById(uid).populate('documents')
+        const userDocuments = user.documents.map(doc => {
+            // Utilizamos una expresión regular para eliminar el timestamp y la extensión del nombre del documento
+            const fileNameWithoutExtension = doc.name.replace(/\d+-/, '').replace(/\..+$/, '')
+            return fileNameWithoutExtension
+        })
+        //verifico que documentos hay cargados
+        const documentsUploaded = requiredDocuments.every(doc => userDocuments.includes(doc))
+        if (user.role === 'premium') {
+            await UserService.toggleUserRole(uid)
+            res.status(200).json({ status: 'success', message: 'El usuario vuelve a ser role User'})
+        } else if (documentsUploaded) {
+            // Cambiar el rol del usuario a premium
+            await UserService.toggleUserRole(uid)
+            res.status(200).json({ status: 'success', message: 'Usuario convertido en Premium' })
+        } else {
+            res.status(400).json({ error: 'El usuario no ha terminado de procesar su documentación.' })
+        }
     } catch (error) {
         req.logger.error ('Error al cambiar el role del usuario:', error)
         res.status(500).json({ error: 'Error al cambiar el rol del usuario.' })
     }
 })
+
 
 module.exports = router
