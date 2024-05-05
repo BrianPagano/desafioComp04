@@ -1,20 +1,38 @@
-//Inportar Multer
-const multer = require ('multer')
+const multer = require('multer')
+
+// Función para definir la carpeta de destino según el tipo de archivo
+const destination = function (req, file, cb) {
+    let folder
+// Leer el fileType del cuerpo de la solicitud
+const fileType = req.body.fileType
+
+// Verificar el tipo de archivo y asignar la carpeta correspondiente
+switch (fileType) {
+    case 'profileImage':
+        folder = 'profiles'
+        break
+    case 'productImage':
+        folder = 'products'
+        break
+    case 'documentFile':
+        folder = 'documents'
+        break
+        default:
+        return cb(new Error('Tipo de archivo no admitido.'))
+}
+
+    // Establecer la ubicación de la carpeta de destino
+    cb(null, `src/public/img/${folder}`)
+}
 
 const storage = multer.diskStorage({
-    //se define la ubicación
-  destination: function (req, file, cb) {
-    cb(null, "src/public/img")
-  },
-  //se define el nombre, agregando un timestamp al nombre original
-  filename: function (req, file, cb) {
-    const originalName = file.originalname.replace(/\s/g, "")
-    cb(null, Date.now() + "-" + originalName)
-  },
-  
+    destination: destination,
+    filename: function (req, file, cb) {
+        const originalName = file.originalname.replace(/\s/g, '')
+        cb(null, Date.now() + '-' + originalName)
+    },
 })
 
 const upload = multer({ storage: storage })
 
-//se exporta la funcion upload para usar como middleware
 module.exports = upload
